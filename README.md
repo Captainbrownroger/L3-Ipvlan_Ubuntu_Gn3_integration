@@ -1,4 +1,4 @@
-Motive for the project is to using Le IPVLAN as docker network and connect one container to the 
+Motive for the project is to using L3 IPVLAN as docker network and connect one container to the 
 network and integrate the network to Gns3 topology to access Gns3 resources via docker container.
 
 Please keep in mind all setup has been done for linux ubuntu 22.04 LTS 
