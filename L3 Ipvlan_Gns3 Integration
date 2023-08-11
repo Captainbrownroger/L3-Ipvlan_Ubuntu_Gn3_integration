@@ -9,7 +9,7 @@
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
  sudo docker network create -d ipvlan \
     --subnet=172.168.125.0/24 \
-    -o parent=vibr0 \
+    -o parent=virbr0 \
     -o ipvlan_mode=l3 Ipvlan
 
 3.VIEW DOCKER NETWORKS
