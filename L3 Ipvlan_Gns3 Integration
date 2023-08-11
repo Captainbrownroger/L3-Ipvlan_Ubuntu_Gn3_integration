@@ -1,0 +1,138 @@
+1. DOCKER L3 IPVLAN LBO NETWORK FOR INTERNET BREAKOUT
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ sudo docker network create -d ipvlan \
+    --subnet=172.168.120.0/24 \
+    -o parent=wlp1s0 \
+    -o ipvlan_mode=l3 Ipvlan_LBO
+
+2. DOCKER L3 IPVLAN INTEGRATED TO GNS3
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ sudo docker network create -d ipvlan \
+    --subnet=172.168.125.0/24 \
+    -o parent=vibr0 \
+    -o ipvlan_mode=l3 Ipvlan
+
+3.VIEW DOCKER NETWORKS
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+captain_jack@CaptainJack:~$ sudo docker network ls 
+NETWORK ID     NAME             DRIVER    SCOPE
+cd0725fb81e2   Ipvlan           ipvlan    local
+33cb91a63762   Ipvlan_LBO       ipvlan    local
+45a306f2818c   bridge           bridge    local
+263c8059fffe   docker_default   bridge    local
+b30706a88573   host             host      local
+8c273123135b   none             null      local
+
+
+4. NEED TO ADD THOSE SUBNETS ON LOCAL HOME ROUTER 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+5. INSTALL DOCKER IN LINUX  URL  https://docs.docker.com/engine/install/ubuntu/ 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+
+6. PULL DOCKER IMAGE AND VIEW DOWNLOADED DOCKER IMAGES
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+sudo docker pull ubuntu 
+sudo docker image ls 
+REPOSITORY               TAG          IMAGE ID       CREATED        SIZE
+ubuntu                   pub_rep      99284ca6cea0   2 months ago   77.8MB
+
+
+7. START DOCKER CONTAINER WITH LBO NETWORK TO UPDTAE AND UPGRADE PACKAGES (SET network_name = Ipvlan_LBO ans set IP with in subnet range defined in network in Docker )
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+sudo docker run -itd --name <container_name> -p <host_port>:<container_port> --network=<network_name> --ip <desired_ip> <image_name>
+
+
+8. SHOW CONAINER IP
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+sudo dodcker inspect <container_ID>
+
+
+9. LOGIN TO THE RUNNING UBUNTU CONTAINER 
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+sudo docker exec -it <container_ID> /bin/bash
+
+
+10. DOWNLOAD BELOW PACKAGE WHILE CONNECT TO Ipvlan_LBO AS THIS ONE HAVE INTERNET (ping,net,ssh,nano txt editor package)
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+apt-get update
+apt-get upgrade
+apt-get install iputils-ping
+apt-get install net-tools
+apt-get install openssh-client
+apt-get install nano 
+
+
+11. DISCONECT THE CONTAINIER TO Ipvla_LBO CONNECT TO  Ipvlan TO CONNECT GNS3
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+sudo docker stop <container_ID>
+sudo docker network disconnet <network_name> <container_ID>
+sudo docker network connet <network_name> <container_ID>
+
+
+12 .GNS3 TOPOLOGY
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+L3 DOCKER VLAN  >>>>>>>>>>>>>>>>  SELECT CLOUD AND ADD SPECIAL >>>>>>>>>>>>>>>>>> CONNECT R1 TO CLOUD ON F0/1            | CONNECT R2 VIA F0/0 >>>>>>>>>>>>>>>>>>>> R2 CONNECTED VIA F0/0
+BOUND WITH VIBR0                  INTERFACE AS VIBRO FOR CLOUD                     ADD STATIC ROUTE <docker_subnet>       | OSPF 100 ARE 0 p2P                      OSPF 100 ARE 0 p2P  
+                                                                                    NEXT HOP <vibr0_ip>                   | LOOP 10 ARE 0                           LOOP 10 ARE 0
+
+                                                                                    OSPF 100 FOR GNS3 ROUTER CONNECTIVITY | ENABLE SSH PRIVILAGE 15                 ENABLE SSH PRIVILAGE 15
+                                                                                    REDISTRIBUTE STATIC TO OSPF           |
+
+
+
+13. NOW YOU ARE ABLE TO SUCCESFULLY ABLE TO SSH TO THE DEVICES FROM DOCKER CONTAINER
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+ssh -l username <device-IP>
+
+
+14. IN THIS CASE YOU MAY ENCOUNTER ERROR WITH OFFERED SSH ENCRYPTION ALGORITH PFB SSH CNFIG DETILS 
+    cat /etc/ssh/ssh_confi >>>>>>>>>>>>>> TO SHOW CURRENT SSH CONFIG DETAILS 
+    sudo nano /etc/ssh/ssh_config >>>>>>>> AND MAKE CHAGES SO THAT THE FILE LOOKS LIKE BELOW 
+
++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Host *
+#   ForwardAgent no
+#   ForwardX11 no
+#   ForwardX11Trusted yes
+#   PasswordAuthentication yes
+#   HostbasedAuthentication no
+#   GSSAPIAuthentication no
+#   GSSAPIDelegateCredentials no
+#   GSSAPIKeyExchange no
+#   GSSAPITrustDNS no
+#   BatchMode no
+#   CheckHostIP yes
+#   AddressFamily any
+#   ConnectTimeout 0
+#   StrictHostKeyChecking ask
+#   IdentityFile ~/.ssh/id_rsa
+#   IdentityFile ~/.ssh/id_dsa
+#   IdentityFile ~/.ssh/id_ecdsa
+#   IdentityFile ~/.ssh/id_ed25519
+#   Port 22
+    Ciphers aes128-ctr,aes192-ctr,aes256-ctr,aes128-cbc,3des-cbc
+    MACs hmac-md5,hmac-sha1,hmac-sha2-256,umac-64@openssh.com
+#   EscapeChar ~
+#   Tunnel no
+#   TunnelDevice any:any
+#   PermitLocalCommand no
+#   VisualHostKey no
+#   ProxyCommand ssh -q -W %h:%p gateway.example.com
+#   RekeyLimit 1G 1h
+#   UserKnownHostsFile ~/.ssh/known_hosts.d/%k
+    SendEnv LANG LC_*
+    HashKnownHosts yes
+    GSSAPIAuthentication yes
+    HostkeyAlgorithms ssh-dss,ssh-rsa
+    KexAlgorithms +diffie-hellman-group1-sha1,diffie-hellman-group14-sha1
+
+
+
+
+
+
+
+
+
+
