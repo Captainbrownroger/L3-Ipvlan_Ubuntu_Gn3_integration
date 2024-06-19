@@ -1,5 +1,7 @@
-Motive for the project is to using L3 IPVLAN as docker network and connect one container to the 
-network and integrate the network to Gns3 topology to access Gns3 resources via docker container.
+Objecttive of the project
+1. We will create a new docker IPVLAN network and attach a docker functional container to the network.
+2. We will setup a topology in GNS3 and connect the docker IPVLAN to GNS3
+3. This will help us this way we can access GNS3 resources from the Docker container as UAT for DEVNET UAT
 
 Please keep in mind all setup has been done for linux ubuntu 22.04 LTS 
 DISTRIB_ID=Ubuntu
